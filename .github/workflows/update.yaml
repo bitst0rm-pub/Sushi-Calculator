@@ -1,0 +1,33 @@
+name: Update Database
+
+on:
+  schedule:
+    - cron: '0 3 */14 * *'  # Every 14 days at 03:00 UTC
+  workflow_dispatch:        # Manual trigger support
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run update script
+        run: python .github/workflows/update.py
+
+      - name: Commit and push if data changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/about.json
+          git diff --cached --quiet || git commit -m "Auto-update"
+          git push
